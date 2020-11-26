@@ -1,0 +1,14 @@
+  # S3バケット作成
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  myS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: "cf-s3"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial

@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # S3バケット作成
+  myS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: "cf-s3"
+      AccessControl: PublicReadWrite
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial

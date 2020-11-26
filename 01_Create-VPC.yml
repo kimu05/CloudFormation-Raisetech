@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # VPC作成
+  FirstVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  # IGW作成
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref FirstVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # ルートテーブル作成
+  FrontendRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn: AttachGateway
+    Properties:
+      VpcId: !Ref FirstVPC
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  # ルートテーブルへIGWの関連付け
+  FrontendRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref FrontendRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  # サブネット作成
+  FrontendSubnet:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      AvailabilityZone: us-east-2a
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: 'true'
+      VpcId: !Ref FirstVPC
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  FrontendSubnet2:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      AvailabilityZone: us-east-2b
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: 'true'
+      VpcId: !Ref FirstVPC
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  PrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: us-east-2a
+      CidrBlock: "10.0.10.0/24"
+      VpcId: !Ref FirstVPC
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  PrivateSubnet2:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: us-east-2b
+      CidrBlock: "10.0.11.0/24"
+      VpcId: !Ref FirstVPC
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  # サブネットをルーティングテーブルと紐付け
+  FrontendSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref FrontendSubnet
+      RouteTableId: !Ref FrontendRouteTable
+
+Outputs:
+  FirstVPC:
+    Value: !Ref FirstVPC
+    Export:
+      Name: FirstVPC
+  FrontendSubnet:
+    Value: !Ref FrontendSubnet
+    Export:
+      Name: FrontendSubnet
+
+  FrontendSubnet2:
+    Value: !Ref FrontendSubnet2
+    Export:
+      Name: FrontendSubnet2
+
+  PrivateSubnet:
+    Value: !Ref PrivateSubnet
+    Export:
+      Name: PrivateSubnet
+
+  PrivateSubnet2:
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: PrivateSubnet2

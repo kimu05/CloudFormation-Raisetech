@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # セキュリティグループ作成
+  Ec2SecurityGroupApp:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Allow http and ssh
+      VpcId: !ImportValue FirstVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "0.0.0.0/0"
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  DBEC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue FirstVPC
+      GroupDescription: Open database for access
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '3306'
+        ToPort: '3306'
+        CidrIp: "10.0.0.100/32"
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+Outputs:
+  Ec2SecurityGroupApp:
+    Value: !Ref Ec2SecurityGroupApp
+    Export:
+      Name: Ec2SecurityGroupApp
+  DBEC2SecurityGroup:
+    Value: !Ref DBEC2SecurityGroup
+    Export:
+      Name: DBEC2SecurityGroup

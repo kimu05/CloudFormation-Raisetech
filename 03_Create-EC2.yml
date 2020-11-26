@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # EC2インスタンス作成
+  Ec2InstanceServer:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      IamInstanceProfile:
+        !Ref S3AccessInstanceProfile
+      # AmazonLinuxを指定しています
+      ImageId: ami-027cab9a7bf0155df
+      InstanceType: "t2.micro"
+      #KeyName: "Raise-Tech_kimu.pem"
+      SecurityGroupIds:
+        - !ImportValue Ec2SecurityGroupApp
+      SubnetId:
+         !ImportValue FrontendSubnet
+      PrivateIpAddress: 10.0.0.100
+      KeyName: Raise-Tech_kimu
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  # ALBのターゲットグループ作成
+  # 参考URL: https://qiita.com/y-ohgi/items/63f5079a3352026ea23a
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !ImportValue FirstVPC
+      # HealthCheck
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: '/'
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      Matcher:
+        HttpCode: '200'
+      # MEMO: トラフィックポートの場合は 'traffic-port'
+      Port: '80'
+      Protocol: HTTP
+      TargetType: 'instance'
+      Targets:
+        - Id: !Ref Ec2InstanceServer
+          Port: 80
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  # ALB作成
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: 'application'
+      SecurityGroups: [!ImportValue Ec2SecurityGroupApp]
+      IpAddressType: 'ipv4'
+      Scheme: 'internet-facing'
+      Subnets:
+        - !ImportValue FrontendSubnet
+        - !ImportValue FrontendSubnet2
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  # ALBのリスナー作成
+  HTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: 'forward'
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref ALB
+      Port: '80'
+      Protocol: 'HTTP'
+
+  # S3アクセス用ロールの作成
+  S3AccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+      RoleName: S3Access
+      Tags:
+        - Key: Name
+          Value: CF-Tutorial
+
+  S3AccessInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      Roles:
+        - Ref: S3AccessRole
