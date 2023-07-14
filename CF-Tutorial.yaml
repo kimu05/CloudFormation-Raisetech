@@ -47,7 +47,7 @@ Resources:
     Type: AWS::EC2::Subnet
     DependsOn: AttachGateway
     Properties:
-      AvailabilityZone: us-east-2a
+      AvailabilityZone: ap-northeast-1a
       CidrBlock: 10.0.0.0/24
       MapPublicIpOnLaunch: 'true'
       VpcId: !Ref FirstVPC
@@ -59,7 +59,7 @@ Resources:
     Type: AWS::EC2::Subnet
     DependsOn: AttachGateway
     Properties:
-      AvailabilityZone: us-east-2b
+      AvailabilityZone: ap-northeast-1c
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: 'true'
       VpcId: !Ref FirstVPC
@@ -70,7 +70,7 @@ Resources:
   PrivateSubnet:
     Type: "AWS::EC2::Subnet"
     Properties:
-      AvailabilityZone: us-east-2a
+      AvailabilityZone: ap-northeast-1a
       CidrBlock: "10.0.10.0/24"
       VpcId: !Ref FirstVPC
       Tags:
@@ -80,7 +80,7 @@ Resources:
   PrivateSubnet2:
     Type: "AWS::EC2::Subnet"
     Properties:
-      AvailabilityZone: us-east-2b
+      AvailabilityZone: ap-northeast-1c
       CidrBlock: "10.0.11.0/24"
       VpcId: !Ref FirstVPC
       Tags:
@@ -127,50 +127,50 @@ Resources:
         - Key: Name
           Value: CF-Tutorial
 
-  # S3アクセス用ロールの作成
-  S3AccessRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - "ec2.amazonaws.com"
-            Action:
-              - "sts:AssumeRole"
-      Path: "/"
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
-      RoleName: S3Access
-      Tags:
-        - Key: Name
-          Value: CF-Tutorial
-
-  S3AccessInstanceProfile:
-    Type: "AWS::IAM::InstanceProfile"
-    Properties:
-      Path: "/"
-      Roles:
-        - Ref: S3AccessRole
+#  # S3アクセス用ロールの作成
+#  S3AccessRole:
+#    Type: AWS::IAM::Role
+#    Properties:
+#      AssumeRolePolicyDocument:
+#        Version: "2012-10-17"
+#        Statement:
+#          - Effect: Allow
+#            Principal:
+#              Service:
+#                - "ec2.amazonaws.com"
+#            Action:
+#              - "sts:AssumeRole"
+#      Path: "/"
+#      ManagedPolicyArns:
+#        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+#      RoleName: S3Access
+#      Tags:
+#        - Key: Name
+#          Value: CF-Tutorial
+#
+#  S3AccessInstanceProfile:
+#    Type: "AWS::IAM::InstanceProfile"
+#    Properties:
+#      Path: "/"
+#      Roles:
+#        - Ref: S3AccessRole
 
   # EC2インスタンス作成
   Ec2InstanceServer:
     Type: "AWS::EC2::Instance"
     Properties:
-      IamInstanceProfile:
-        !Ref S3AccessInstanceProfile
+#      IamInstanceProfile:
+#        !Ref S3AccessInstanceProfile
       # AmazonLinuxを指定しています
-      ImageId: ami-027cab9a7bf0155df
+      ImageId: ami-05ffd9ad4ddd0d6e2
       InstanceType: "t2.micro"
-      #KeyName: "Raise-Tech_kimu.pem"
+      KeyName: "training-dev-keypair"
       SecurityGroupIds:
         - !Ref Ec2SecurityGroupApp
       SubnetId:
          !Ref FrontendSubnet
       PrivateIpAddress: 10.0.0.100
-      KeyName: Raise-Tech_kimu
+      #KeyName: Raise-Tech_kimu
       Tags:
         - Key: Name
           Value: CF-Tutorial
@@ -229,19 +229,27 @@ Resources:
       Port: '80'
       Protocol: 'HTTP'
 
-  # S3バケット作成
-  myS3:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: "cf-s3"
-      AccessControl: PublicReadWrite
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      Tags:
-        - Key: Name
-          Value: CF-Tutorial
+#  # S3バケット作成
+#  myS3:
+#    Type: AWS::S3::Bucket
+#    Properties:
+#      BucketName: "cf-s3-2023-714"
+#      AccessControl: PublicReadWrite
+#      PublicAccessBlockConfiguration: 
+#        BlockPublicAcls: false
+#        BlockPublicPolicy: false
+#        IgnorePublicAcls: false
+#        RestrictPublicBuckets: false
+#      OwnershipControls:
+#        Rules:
+#          - ObjectOwnership: ObjectWriter
+#      BucketEncryption:
+#        ServerSideEncryptionConfiguration:
+#          - ServerSideEncryptionByDefault:
+#              SSEAlgorithm: AES256
+#      Tags:
+#        - Key: Name
+#          Value: CF-Tutorial
 
   # RDS作成
 #  MyDB:
